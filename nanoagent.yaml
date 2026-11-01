@@ -1,0 +1,44 @@
+_ > nanoagent.plugin.v0001.ManifestConfig:
+id: sportsbrief-factcheck
+name: Box Score Fact Check
+version: 0.1.0
+status: ready
+spec: nanoagent.plugin/v0001
+
+runtime > nanoagent.plugin.v0001.RuntimeConfig:
+  type: mcp_stdio
+  command: [uv, run, --frozen, python, -m, plugin]
+
+permissions > nanoagent.plugin.v0001.PermissionsConfig:
+  network > nanoagent.plugin.v0001.NetworkConfig:
+    hosts: []
+  filesystem > nanoagent.plugin.v0001.FilesystemConfig:
+    write: [workspace]
+
+# One entry per contract.Tool; its input and output classes are contract.TOOLS's.
+tools > dict[contract.Tool, nanoagent.plugin.v0001.ToolConfig]:
+  pin_claims:
+    description: Pin the task's answer key, the bundled game's box score and every claim's meaning (subject, stat, comparison, number) with the label the rules give
+  read_game:
+    description: Read a bundled game's box score (each player's minutes, points, rebounds and assists, and each team's points) and the claims to check, one sentence each; records what it read under factcheck/ in the workspace
+
+# One entry per contract.Task; its input class is contract.TASKS's.
+tasks > dict[contract.Task, nanoagent.plugin.v0001.TaskConfig]:
+  check-claims:
+    description: Check ten one-sentence claims about a game against its box score, labelling each supported, contradicted or not_found, with the number the box score gives
+    runner: agent
+    tools: [read_game]
+    reference: pin_claims
+    instructions: |-
+      Plan. Exactly two tool calls: (1) read_game once, with the task's game exactly as given; (2) submit. Judge every claim from the box score alone.
+      Reading a claim. Each claim is one sentence about one subject, a player (named as the box score spells it) or a team (The <team>), one stat (points, rebounds, assists or minutes) and one comparison with a number: "at least N" means the stat is N or more; "more than N" means greater than N; "exactly N" means equal to N; "at most N" means N or less; "fewer than N" means less than N. A number equal to N satisfies at least, exactly and at most, and fails more than and fewer than.
+      Looking up. A player's number is the stat on that player's line. A team's number is its points, home_score or away_score; the box score gives no other stat for a team. The subject is not found when the player has no line in this game, the team is not one of the two that played, or the claim asks for a team's rebounds, assists or minutes.
+      Labels. supported when the number satisfies the comparison; contradicted when it does not; not_found when there is no number. observed is the number looked up (the stat's value, whether the claim holds or not), and null for a not_found claim.
+      Submit. game exactly as given, and verdicts: one per claim, in id order (c01, c02, ...), each with claim, label and observed. Reason briefly: one short line per claim with the number and the comparison, no prose.
+  read-game:
+    description: Read a bundled game's box score and the claims about it, so a person can check the claims themselves
+    runner: tool
+    tools: [read_game]
+    reference: null
+    instructions: |-
+      Call read_game with the game (lynx-herons, foxes-bison or otters-wolves). Use it when the person wants the box score and the claims; the check-claims task judges the claims.

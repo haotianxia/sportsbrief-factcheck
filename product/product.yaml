@@ -1,0 +1,12 @@
+_ > nanoagent.plugin.v0001.ProductConfig:
+tagline: "Check what a report says about a game against the box score, claim by claim"
+summary: "Pick a bundled game. The agent reads its box score and ten one-sentence claims about it, such as a player scoring at least 31 points or a team scoring fewer than 100, and labels each one supported, contradicted or not found, citing the number the box score gives. The check pins the box score and each claim's exact meaning, re-derives every label, and shows which claims the agent got right."
+highlights:
+  - "Three bundled games of a fictional league, ten claims each, written to sit on the boundaries: at least versus more than, at most versus fewer than, exactly"
+  - "Claims about players who did not play, teams that did not, and team stats the box score does not give, which must be not found"
+  - "Every claim's text is generated from its meaning by one template, so the answer key says exactly what the sentence says"
+  - "Every verdict lists its 7 checks, each wrong label with the number that decides it, and the share of claims right"
+steps:
+  - "Ask to check the claims about a game (lynx-herons, foxes-bison or otters-wolves)"
+  - "The agent reads the box score and the claims in one call, judges each claim and submits the verdicts"
+  - "Read the verdicts with their check, or ask to read the box score and claims yourself"
